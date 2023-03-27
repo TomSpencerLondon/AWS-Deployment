@@ -1,5 +1,7 @@
 ### Spring Boot and AWS
 
+
+
 ### Introduction
 In this article we will learn about everything that is required for deploying a Spring Boot application
 to AWS. We will deploy a Docker container and learn how to use AWS CloudFormation and the AWS Cloud Development kit (CDK)
@@ -11,6 +13,11 @@ We will also build a feature to share todos between users fully managed by AWS.
 
 We will then look at some of the important aspects for running an application in production. We will learn how to use Amazon CloudWatch
 to view logs and metrics. By actively monitoring our application and creating alerts we will be able to detect failures quickly.
+
+Useful links:
+https://github.com/stratospheric-dev/stratospheric/tree/main/chapters
+https://stratospheric.dev/
+
 
 ### Spring Boot and AWS
 Spring Boot is the leading framework for building applications with Java. With Spring Boot we can quickly build
