@@ -120,4 +120,45 @@ AWS allows us to use the services via the web console, AWS CLI, CloudFormation a
 CloudFormation allows us to declare resources and deploy them with a single command. CDK allows
 us to combine resources to "constructs" and share them as Java libraries.
 
+### Using AWS (setup)
+- [AWS Sign up](https://aws.amazon.com/free/?all-free-tier.sort-by=item.additionalFields.SortRank&all-free-tier.sort-order=asc&awsf.Free%20Tier%20Types=*all&awsf.Free%20Tier%20Categories=*all)
+- [AWS Sign in](https://aws.amazon.com/)
+- [Guide to install the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+- AWS CLI commands
+```bash 
+aws --version
+aws configure
+aws configure --profile stratospheric
+export AWS_PROFILE=stratospheric
+aws ec2 describe-vpcs --profile stratospheric
+```
+This is how to check your configuration:
+```bash
+tom@tom-ubuntu:~/.aws$ aws configure --profile default
+AWS Access Key ID [****************HJEB]: 
+AWS Secret Access Key [****************mdFI]: 
+Default region name [eu-west-2]: 
+Default output format [None]: 
+```
+
+We can update our cli with:
+```bash
+pip3 install awscli --upgrade --user
+```
+We should add our configuration for a different profile with the following:
+```bash
+aws configure --profile stratospheric
+```
+We then add the credentials and configuration we wish to use with the profile. The profile information
+is kept in the .aws folder.
+In this section we have looked at creating a "free" AWS account. We have installed the AWS CLI and we can use profiles
+if we want to manage multiple AWS accounts with the AWS CLI.
+
+### Elastic Container Registry
+Here we will learn how to wrap an app into a Docker image. We will also learn how to create a Docker repository with Amazon
+Elastic Container Registry (ECR) and how to publish a Docker image to an Elastic Container Registry (ECR)
+repository.
+
+
+
 
