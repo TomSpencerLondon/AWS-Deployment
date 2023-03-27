@@ -159,6 +159,6 @@ Here we will learn how to wrap an app into a Docker image. We will also learn ho
 Elastic Container Registry (ECR) and how to publish a Docker image to an Elastic Container Registry (ECR)
 repository.
 
-
+![image](https://user-images.githubusercontent.com/27693622/228086206-499a178c-237a-4689-a6c4-afdb829c74c6.png)
 
 
