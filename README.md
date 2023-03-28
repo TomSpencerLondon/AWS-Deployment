@@ -411,4 +411,9 @@ syntax.
 
 ![image](https://user-images.githubusercontent.com/27693622/228186447-f3c90300-de92-42a2-b26b-31dd7c79ccc0.png)
 
+The above network stack contains all the resources we need so that our users can access the internet. It also includes
+internal networking so that our application can access the database for example. We deploy a network stack which can be deployed
+once. The application is deployed in the service stack which includes the compute resources that we require for our application.
+There will be different requirements in different contexts.
+
 ![image](https://user-images.githubusercontent.com/27693622/228189708-39fefa05-6763-4115-839e-16bfcbfd6029.png)
