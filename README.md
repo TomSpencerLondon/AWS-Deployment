@@ -685,5 +685,6 @@ In the diagram above we have multiple tasks. Service A runs two instances of Tas
 for Task 1 so that is why we have included them within this service. The cluster is a wrapper around one or more services and binds the services
 to a specific AWS region and VPC. Each task is a process. We can now look at how each Task is assigned a process:
 
+![image](https://user-images.githubusercontent.com/27693622/228239310-5b6508e7-ac80-4b85-8e8f-321fb5314800.png)
 
 
