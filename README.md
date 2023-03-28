@@ -691,6 +691,193 @@ The Task Definition tells us what Docker image to run and then we use the image 
 different launch types for ECS - Fargate and EC2. The Fargate launch type does work for us. Fargate spins a fleet of required EC2 instances and manages
 them for us after we have specified which tasks to run and how many task instances we want to have running at all times. The EC2
 launch type allows us to control the EC2 instances that are running our tasks and we have to manage this process. We can define
-auto scaling rules but have to define our own auto-scaling group.
+auto scaling rules but have to define our own auto-scaling group. We are going to use the Fargate Launch type.
+We have defined ECS in our network.yml file:
+```yaml
+
+
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+
+  ECSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the ECS containers
+      VpcId: !Ref 'VPC'
+
+  ECSSecurityGroupIngressFromAnywhere:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Allows inbound traffic from anywhere
+      GroupId: !Ref 'ECSSecurityGroup'
+      IpProtocol: -1
+      CidrIp: 0.0.0.0/0
+```
+Here we define a security group that allows inbound traffic from anywhere. We set the IpProtocol to -1 which means any 
+ip protocol. Later in the file we add IAM role for permission for ECS and logging. We are using the same ECS cluster for all
+services.
+
+### Deploying the Service Stack with CloudFormation
+
+For our Service Stack we have added several parameters:
+```yaml
+Parameters:
+  NetworkStackName:
+    Type: String
+    Description: The name of the networking stack that
+      these resources are put into.
+  ServiceName:
+    Type: String
+    Description: A human-readable name for the service.
+  ImageUrl:
+    Type: String
+    Description: The url of a docker image that will handle incoming traffic.
+  ContainerPort:
+    Type: Number
+    Default: 80
+    Description: The port number the application inside the docker container
+      is binding to.
+  ContainerCpu:
+    Type: Number
+    Default: 256
+    Description: How much CPU to give the container. 1024 is 1 CPU.
+  ContainerMemory:
+    Type: Number
+    Default: 512
+    Description: How much memory in megabytes to give the container.
+  DesiredCount:
+    Type: Number
+    Default: 1
+    Description: How many copies of the service task to run.
+```
+
+These include the network stack name, service name, image url and container port for each service that we want to deploy
+within the cluster. We have a Task section to define the task within our service:
+```yaml
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref 'ServiceName'
+      Cpu: !Ref 'ContainerCpu'
+      Memory: !Ref 'ContainerMemory'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn:
+        Fn::ImportValue:
+          !Join [':', [!Ref 'NetworkStackName', 'ECSTaskExecutionRole']]
+      ContainerDefinitions:
+        - Name: !Ref 'ServiceName'
+          Cpu: !Ref 'ContainerCpu'
+          Memory: !Ref 'ContainerMemory'
+          Image: !Ref 'ImageUrl'
+          PortMappings:
+            - ContainerPort: !Ref 'ContainerPort'
+          LogConfiguration:
+            LogDriver: 'awslogs'
+            Options:
+              awslogs-group: !Ref 'ServiceName'
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: !Ref 'ServiceName'
+```
+
+We also define the service with a maximum percent deployment configuration for when we redeploy Tasks within the service:
+```yaml
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: !Ref 'ServiceName'
+      Cluster:
+        Fn::ImportValue:
+          !Join [':', [!Ref 'NetworkStackName', 'ClusterName']]
+      LaunchType: FARGATE
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 50
+      DesiredCount: !Ref 'DesiredCount'
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - Fn::ImportValue:
+                !Join [':', [!Ref 'NetworkStackName', 'ECSSecurityGroup']]
+          Subnets:
+            - Fn::ImportValue:
+                !Join [':', [!Ref 'NetworkStackName', 'PublicSubnet']]
+      TaskDefinition: !Ref 'TaskDefinition'
+```
+
+We will use the hello-world-app for deploying our service. We need the url of our hello-world-app.
+
+![image](https://user-images.githubusercontent.com/27693622/228247393-17e9f8d5-cf00-448f-9c36-be3747cf5c5c.png)
+
+This is the command for deploying the service:
+```yaml
+aws cloudformation deploy \
+--stack-name dev-service \
+--template-file service.yml \
+--profile stratospheric \
+--parameter-overrides \
+  NetworkStackName=dev-network \
+  ServiceName=hello-world-app \
+  ImageUrl=706054169063.dkr.ecr.us-east-1.amazonaws.com/hello-world-app:latest
+  ContainerPort=8080
+```
+We can then see the created stack on CloudFormation Stacks:
+![image](https://user-images.githubusercontent.com/27693622/228248932-1bb1981f-c12d-44ee-a375-e0dec7b0f002.png)
+
+We also now have one cluster running with one service and one running task:
+![image](https://user-images.githubusercontent.com/27693622/228249482-e3f285de-e9d2-4f0f-b5dd-edec5b286a9a.png)
+
+If we check the Task for the running Service we see that we have a running task and we can also see a public IP address:
+![image](https://user-images.githubusercontent.com/27693622/228250488-1c72c1a3-b127-4d3b-bcf5-4e40f6107d18.png)
+
+We can now type in the ip address at the port 8080:
+![image](https://user-images.githubusercontent.com/27693622/228251115-bd13b3be-dc8a-4e57-95f2-18660e6e5602.png)
+
+and we can see our running task using the Docker image that we deployed to ECR.
+
+We have looked at ECS tasks which run docker images that run in an ECS service and ECS cluster.
+A task can run one or more Docker images and we can use resources across different CloudFormation stacks using output and input
+parameters. In order to replace our ip address we will use a load balancer as a single point of entry for the stack with a fixed host name.
+
+### Using Cloud Development Kit (CDK)
+With CloudFormation we declared the resources we want in a cloud yaml file. We will now use Infrastructure as Code with Java to describe
+the cloud resources required. CDK is an abstraction on top of CloudFormation.
+CDK introduces the idea of a construct to combine multiple resources. Level 1 constructs represent one CloudFormation Resource.
+Level 2 Constructs represent a set of resources. Level 2 Constructs infer some of the options for us and set sensible defaults.
+Level 3 Constructs create patterns for 
+
+
+
+### AWS AppConfig Agent for Containers
+- What is AWS AppConfig?
+- Why did we develop an agent?
+- About the agent
+- Container image
+- Demo: Using the agent in ECS
+
+#### What is AWS AppConfig?
+AppConfig is changing the way software is developed released and run. It is a dynamic configuration service.
+Configuration changes the way the software runs depending on the environment. For instance we may want to use different
+databases for different environments. Before dynamic configuration we had static configuration.
+For applications we have source code and configuration data. Static Configuration can be time consuming.
+In order to change endpoints we would have to roll back the application.
+Dynamic configuration allows us to deploy the configuration data from a remote service at runtime.
+If we use AppConfig we can change configuration separately from the deployment.
+There are deployment safety configurations we can use with AppConfig which allow us to deploy the configuration changes
+gradually. AppConfig includes Feature Flags, Access Control Lists and throttling limits.
+Throttling is a DDOS protection mechanism which allows a limit of requests to the service. You can allow overrides for
+particular users.
+
+#### AppConfig Agent
+Before AppConfig Agent management logic including caching, background polling and session management needed to be contained
+within AppConfig directly. The agent is a sidecar process that runs alongside the application. It allows us to add configuration
+separately. Customers can then set their own config themselves. This is the image gallery:
+![image](https://user-images.githubusercontent.com/27693622/228269559-1bc3b3f6-d720-454f-b31e-18a7bfa6eb74.png)
+
+These doc is useful for AWS AppConfig integration with Amazon ECS and Amazon EKS:
+https://docs.aws.amazon.com/appconfig/latest/userguide/appconfig-integration-containers-agent.html
+
 
 
