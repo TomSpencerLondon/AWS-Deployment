@@ -1,0 +1,17 @@
+{
+  "name": "hello-cdk",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "stack1:deploy": "cdk deploy --app \"./mvnw -e -q compile exec:java -Dexec.mainClass=com.myorg.CdkExampleApp \" --require-approval never --profile stratospheric",
+    "stack1:destroy": "cdk destroy --app \"./mvnw -e -q compile exec:java -Dexec.mainClass=com.myorg.CdkExampleApp \" --require-approval never --profile stratospheric",
+    "stack2:deploy": "cdk deploy --app \"./mvnw -e -q compile exec:java -Dexec.mainClass=com.myorg.CdkExampleApp2 \" --require-approval never --profile stratospheric",
+    "stack2:destroy": "cdk destroy --app \"./mvnw -e -q compile exec:java -Dexec.mainClass=com.myorg.CdkExampleApp2 \" --require-approval never --profile stratospheric"
+  },
+  "devDependencies": {
+    "aws-cdk": "2.70.0"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}

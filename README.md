@@ -846,20 +846,252 @@ With CloudFormation we declared the resources we want in a cloud yaml file. We w
 the cloud resources required. CDK is an abstraction on top of CloudFormation.
 CDK introduces the idea of a construct to combine multiple resources. Level 1 constructs represent one CloudFormation Resource.
 Level 2 Constructs represent a set of resources. Level 2 Constructs infer some of the options for us and set sensible defaults.
-Level 3 Constructs create patterns for 
+Level 3 Constructs create patterns for several resources.
+
+We install the CDK CLI with:
+```bash
+tom@tom-ubuntu:~/Projects/stratospheric/cloudformation$ npm install -g aws-cdk
+tom@tom-ubuntu:~/Projects/stratospheric/cloudformation$ cdk --version
+2.70.0 (build c13a0f1)
+```
+We create a new cdk app with:
+```yaml
+cdk init app --language=java
+```
+
+This creates an application with two main parts. The App:
+```java
+public class CdkExampleApp {
+    public static void main(final String[] args) {
+        App app = new App();
+
+        new CdkExampleStack(app, "CdkExampleStack", StackProps.builder()
+                .build());
+
+        app.synth();
+    }
+}
+```
+This class creates an App object and a stack object linked to the app. The synth command creates a synthesis
+step to create a CloudFormation template from the Java code.
+
+The Stack class is where we define the resources that we want to deploy:
+```java
+public class CdkExampleStack extends Stack {
+    public CdkExampleStack(final Construct scope, final String id) {
+        this(scope, id, null);
+    }
+
+    public CdkExampleStack(final Construct scope, final String id, final StackProps props) {
+        super(scope, id, props);
+    }
+}
 
 
+```
+
+This is a maven project and we can use the following commands:
+```bash
+It is a [Maven](https://maven.apache.org/) based project, so you can open this project with any Maven compatible Java IDE to build and run tests.
+
+## Useful commands
+
+ * `mvn package`     compile and run tests
+ * `cdk ls`          list all stacks in the app
+ * `cdk synth`       emits the synthesized CloudFormation template
+ * `cdk deploy`      deploy this stack to your default AWS account/region
+ * `cdk diff`        compare deployed stack with current state
+ * `cdk docs`        open CDK documentation
+```
+We need maven versions to be shared across different environments. This will help us to install the correct
+maven version. We install the maven wrapper with the following command:
+```bash
+mvn wrapper:wrapper
+```
+This installs the .mvn file:
+
+![image](https://user-images.githubusercontent.com/27693622/228281294-b317cdde-7692-4620-b332-e05439ae8a0c.png)
+
+We can now use the command ```./mvnw``` with the same maven commands as before.
+
+We also change the cdk.json to refer to the mvnw command:
+```yaml
+{
+  "app": "mvnw -e -q compile exec:java"
+}
+```
+
+We now need to run the following command to create infrastructure for cdk to deploy apps to CloudFormation:
+```bash
+cdk bootstrap --profile stratospheric
+```
+This creates an S3 bucket and IAM roles for the deployment.
+We can now deploy the application with:
+```bash
+cdk deploy --profile stratospheric
+```
+
+We can now see the CloudFormation stack in the CloudFormation web console:
+![image](https://user-images.githubusercontent.com/27693622/228283658-8d12172c-be82-4c3c-b734-a5f577ccb918.png)
+
+At the moment the stack is empty. We can now create the ECS repository with CDK using the following doc:
+https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ecr.Repository.html
+
+Level 2 Constructs are listed as Constructs. The level 1 Constructs are listed as Cfn... For the moment
+we will stick with Level 2 Constructs. We get the correct methods for our CDK Stack with the following:
+https://docs.aws.amazon.com/cdk/api/v2/java/index.html?software/amazon/awscdk/services/ecr/Repository.html
+
+Our CdkExampleStack now looks like the following:
+```java
+public class CdkExampleStack extends Stack {
+    public CdkExampleStack(final Construct scope, final String id) {
+        this(scope, id, null);
+    }
+
+    public CdkExampleStack(final Construct scope, final String id, final StackProps props) {
+        super(scope, id, props);
+
+        Repository.Builder.create(this, "repository")
+                .repositoryName("hello-world-repo")
+                .imageScanOnPush(Boolean.TRUE)
+                .lifecycleRules(Arrays.asList(LifecycleRule.builder()
+                        .maxImageCount(10)
+                        .build()))
+                .imageTagMutability(TagMutability.IMMUTABLE)
+                .build();
+    }
+}
+```
+We can now deploy our cdk app with:
+```bash
+cdk deploy --profile stratospheric
+```
+This has created a CloudFormation stack
+![image](https://user-images.githubusercontent.com/27693622/228288969-2b1ea3bc-36ce-4357-807f-780d5cf633a9.png)
+
+and a hello-world-repo ECR repository:
+
+![image](https://user-images.githubusercontent.com/27693622/228289184-d94ff025-5e04-4095-a606-7f523dfbce24.png)
+
+For now this repository is empty. We will use the Stratospheric cdk construct maven dependency [here](https://github.com/stratospheric-dev/cdk-constructs/blob/main/src/main/java/dev/stratospheric/cdk/DockerRepository.java)
+to add more to our repository configuration. We will add this configuration with the following maven dependency:
+```properties
+<dependency>
+    <groupId>dev.stratospheric</groupId>
+    <artifactId>cdk-constructs</artifactId>
+    <version>0.1.13</version>
+</dependency>
+```
+
+We can now reduce the code using the stratospheric cdk-constructs dependency:
+```java
+public class CdkExampleStack extends Stack {
+    public CdkExampleStack(final Construct scope, final String id) {
+        this(scope, id, null);
+    }
+
+    public CdkExampleStack(final Construct scope, final String id, final StackProps props) {
+        super(scope, id, props);
+
+        String accountId = "12345";
+        Environment environment = Environment.builder()
+                .account(accountId)
+                .region("ap-southeast-2")
+                .build();
+
+        DockerRepository repo = new DockerRepository(this, "repo", environment,
+                new DockerRepository.DockerRepositoryInputParameters(
+                        "hello-world-repo",
+                        accountId,
+                        10
+                ));
+    }
+}
+
+```
+This will do the same as above but also add push and pull permissions. We can delete the hello-world-repo
+and create a new stack with the following command:
+
+```bash
+cdk deploy --profile stratospheric
+```
+
+This fails because we have the incorrect AccountID in /stratospheric/cdk-example/cdk.out/CdkExampleStack.template.json:
+```json
+[
+  "arn:",
+   {
+    "Ref": "AWS::Partition"
+   },
+  ":iam::12345:root"
+]
+```
+We will look at how to fix this error in the next section.
+
+In this section, we have abstracted some of CloudFormation's complexity with Constructs and used some of our knowledge of
+CloudFormation resources. We have also used a shared library to share the construct across projects.
+
+### CDK Best Practices
+We will now learn how to debug a CDK app. We will manage different environments with CDK, manage input parameters and
+also manage multiple stacks.
+
+First we correct the above code with an environment object:
+```java
+public class CdkExampleApp {
+    public static void main(final String[] args) {
+        App app = new App();
+
+        String accountId = (String) app.getNode().tryGetContext("accountId");
+        String region = (String) app.getNode().tryGetContext("region");
+
+        Environment environment = makeEnv(accountId, region);
+
+        new CdkExampleStack(app, "CdkExampleStack", StackProps.builder()
+                .env(environment)
+                .build());
+
+        app.synth();
+    }
+
+    static Environment makeEnv(String account, String region) {
+        return Environment.builder()
+                .account(account)
+                .region(region)
+                .build();
+    }
+}
+
+```
+The environment can then be used in the Stack directly:
+
+```java
+public class CdkExampleStack extends Stack {
+    public CdkExampleStack(final Construct scope, final String id) {
+        this(scope, id, null);
+    }
+
+    public CdkExampleStack(final Construct scope, final String id, final StackProps props) {
+        super(scope, id, props);
+
+        Environment env = props.getEnv();
+
+        DockerRepository repo = new DockerRepository(this, "repo", env,
+                new DockerRepository.DockerRepositoryInputParameters(
+                        "hello-world-repo",
+                        env.getAccount(),
+                        10
+                ));
+    }
+}
 
 
+```
 
-
-
-
-
-
-
-
-
+We now need to pass the accountId into our command. We can call the above code with the following:
+```bash
+cdk deploy -c accountId=<ACCOUNT_ID> region=eu-west-2
+```
+This successfully creates the hello-world-repo on ECR.
 
 
 ### AWS AppConfig Agent for Containers
@@ -891,5 +1123,82 @@ separately. Customers can then set their own config themselves. This is the imag
 These doc is useful for AWS AppConfig integration with Amazon ECS and Amazon EKS:
 https://docs.aws.amazon.com/appconfig/latest/userguide/appconfig-integration-containers-agent.html
 
+We have now added two Apps to be deployed and deleted the plugin code relating to the default App:
+```bash
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <configuration>
+                    <mainClass>com.myorg.CdkExampleApp</mainClass>
+                </configuration>
+            </plugin>
+```
+
+This does mean that we have to add the App name as parameter when we deploy our App.
+```bash
+tom@tom-ubuntu:~/Projects/stratospheric/cdk-example$ cdk deploy --app "./mvnw -e -q compile exec:java -Dex
+ec.mainClass=com.myorg.CdkExampleApp2" \
+--profile stratospheric \
+-c accountId=<ACCOUNT_ID> \
+-c region=eu-west-2 \
+-c repoName=foo
+```
+We can also add the arguments to the cdk.json file:
+```yaml
+{
+  "context": {
+    "region": "eu-west-2",
+    "accountId": "706054169063",
+    "repoName": "my-cool-repo"
+  }
+}
+```
+
+This shortens our command:
+```bash
+cdk deploy --app "./mvnw -e -q compile exec:java -Dexec.mainClass=com.myorg.CdkExampleApp2" --profile stratospheric
+```
+
+We can also create a package.json file to deploy and destroy our apps:
+```bash
+{
+  "name": "hello-cdk",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "stack1:deploy": "cdk deploy --app \"./mvnw -e -q compile exec:java -Dexec.mainClass=com.myorg.CdkExampleApp \" --require-approval never --profile stratospheric",
+    "stack1:destroy": "cdk destroy --app \"./mvnw -e -q compile exec:java -Dexec.mainClass=com.myorg.CdkExampleApp \" --require-approval never --profile stratospheric",
+    "stack2:deploy": "cdk deploy --app \"./mvnw -e -q compile exec:java -Dexec.mainClass=com.myorg.CdkExampleApp2 \" --require-approval never --profile stratospheric",
+    "stack2:destroy": "cdk destroy --app \"./mvnw -e -q compile exec:java -Dexec.mainClass=com.myorg.CdkExampleApp2 \" --require-approval never --profile stratospheric",
+  },
+  "devDependencies": {
+    "aws-sdk": "2.43.1"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}
+```
+We run npm install to initialize the npm project and can run:
+```bash
+npm run stack2:deploy
+```
+The parameters for the deploy are still kept in the cdk.json file:
+```json
+{
+  "context": {
+    "region": "eu-west-2",
+    "accountId": "706054169063",
+    "repoName": "my-cool-repo"
+  }
+}
+
+```
+We could override the values in the cdk.json file from the command line.
+
+So far we have looked at debugging CloudFormation scripts by using the cdk.out file.
+We have tried to stick to the rule of using one stack per app and we have used the cdk.json
+and npm to save retyping scripts and parameters.
 
 
