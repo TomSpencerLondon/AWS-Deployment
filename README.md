@@ -260,3 +260,5 @@ a template file. We will also find our stack on the AWS web console.
 
 ![image](https://user-images.githubusercontent.com/27693622/228094645-7efebfc7-b999-4940-9677-8b8f2780ecb5.png)
 
+We will create a Docker repository stack:
+![image](https://user-images.githubusercontent.com/27693622/228096362-770b5794-ecf3-4cea-830b-30305b5414d1.png)
