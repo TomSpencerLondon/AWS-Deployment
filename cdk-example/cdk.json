@@ -1,20 +1,8 @@
 {
-  "watch": {
-    "include": [
-      "**"
-    ],
-    "exclude": [
-      "README.md",
-      "cdk*.json",
-      "target",
-      "pom.xml",
-      "src/test"
-    ]
-  },
   "context": {
     "region": "eu-west-2",
     "accountId": "706054169063",
-    "repoName": "my-cool-repo",
+    "applicationName": "hello-world-app",
     "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
     "@aws-cdk/core:checkSecretUsage": true,
     "@aws-cdk/core:target-partitions": [

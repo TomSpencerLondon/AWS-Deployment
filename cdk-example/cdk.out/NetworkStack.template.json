@@ -1,0 +1,798 @@
+{
+ "Resources": {
+  "NetworkvpcCC65534B": {
+   "Type": "AWS::EC2::VPC",
+   "Properties": {
+    "CidrBlock": "10.0.0.0/16",
+    "EnableDnsHostnames": true,
+    "EnableDnsSupport": true,
+    "InstanceTenancy": "default",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "prod"
+     },
+     {
+      "Key": "Name",
+      "Value": "NetworkStack/Network/vpc"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/vpc/Resource"
+   }
+  },
+  "NetworkvpcprodpublicSubnetSubnet1SubnetE0640059": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "VpcId": {
+     "Ref": "NetworkvpcCC65534B"
+    },
+    "AvailabilityZone": "eu-west-2a",
+    "CidrBlock": "10.0.0.0/18",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "prod-publicSubnet"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "environment",
+      "Value": "prod"
+     },
+     {
+      "Key": "Name",
+      "Value": "NetworkStack/Network/vpc/prod-publicSubnetSubnet1"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/vpc/prod-publicSubnetSubnet1/Subnet"
+   }
+  },
+  "NetworkvpcprodpublicSubnetSubnet1RouteTableF4591960": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "VpcId": {
+     "Ref": "NetworkvpcCC65534B"
+    },
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "prod"
+     },
+     {
+      "Key": "Name",
+      "Value": "NetworkStack/Network/vpc/prod-publicSubnetSubnet1"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/vpc/prod-publicSubnetSubnet1/RouteTable"
+   }
+  },
+  "NetworkvpcprodpublicSubnetSubnet1RouteTableAssociationD92E449E": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "NetworkvpcprodpublicSubnetSubnet1RouteTableF4591960"
+    },
+    "SubnetId": {
+     "Ref": "NetworkvpcprodpublicSubnetSubnet1SubnetE0640059"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/vpc/prod-publicSubnetSubnet1/RouteTableAssociation"
+   }
+  },
+  "NetworkvpcprodpublicSubnetSubnet1DefaultRouteC5483AE1": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "NetworkvpcprodpublicSubnetSubnet1RouteTableF4591960"
+    },
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "NetworkvpcIGWFEE87DAF"
+    }
+   },
+   "DependsOn": [
+    "NetworkvpcVPCGW6D90D482"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/vpc/prod-publicSubnetSubnet1/DefaultRoute"
+   }
+  },
+  "NetworkvpcprodpublicSubnetSubnet2Subnet4833FEA7": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "VpcId": {
+     "Ref": "NetworkvpcCC65534B"
+    },
+    "AvailabilityZone": "eu-west-2b",
+    "CidrBlock": "10.0.64.0/18",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "prod-publicSubnet"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "environment",
+      "Value": "prod"
+     },
+     {
+      "Key": "Name",
+      "Value": "NetworkStack/Network/vpc/prod-publicSubnetSubnet2"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/vpc/prod-publicSubnetSubnet2/Subnet"
+   }
+  },
+  "NetworkvpcprodpublicSubnetSubnet2RouteTable5B199527": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "VpcId": {
+     "Ref": "NetworkvpcCC65534B"
+    },
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "prod"
+     },
+     {
+      "Key": "Name",
+      "Value": "NetworkStack/Network/vpc/prod-publicSubnetSubnet2"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/vpc/prod-publicSubnetSubnet2/RouteTable"
+   }
+  },
+  "NetworkvpcprodpublicSubnetSubnet2RouteTableAssociationAA346FCE": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "NetworkvpcprodpublicSubnetSubnet2RouteTable5B199527"
+    },
+    "SubnetId": {
+     "Ref": "NetworkvpcprodpublicSubnetSubnet2Subnet4833FEA7"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/vpc/prod-publicSubnetSubnet2/RouteTableAssociation"
+   }
+  },
+  "NetworkvpcprodpublicSubnetSubnet2DefaultRoute53C417B1": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "NetworkvpcprodpublicSubnetSubnet2RouteTable5B199527"
+    },
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "NetworkvpcIGWFEE87DAF"
+    }
+   },
+   "DependsOn": [
+    "NetworkvpcVPCGW6D90D482"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/vpc/prod-publicSubnetSubnet2/DefaultRoute"
+   }
+  },
+  "NetworkvpcprodisolatedSubnetSubnet1SubnetB2DD77B9": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "VpcId": {
+     "Ref": "NetworkvpcCC65534B"
+    },
+    "AvailabilityZone": "eu-west-2a",
+    "CidrBlock": "10.0.128.0/18",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "prod-isolatedSubnet"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Isolated"
+     },
+     {
+      "Key": "environment",
+      "Value": "prod"
+     },
+     {
+      "Key": "Name",
+      "Value": "NetworkStack/Network/vpc/prod-isolatedSubnetSubnet1"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/vpc/prod-isolatedSubnetSubnet1/Subnet"
+   }
+  },
+  "NetworkvpcprodisolatedSubnetSubnet1RouteTable321FD8E7": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "VpcId": {
+     "Ref": "NetworkvpcCC65534B"
+    },
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "prod"
+     },
+     {
+      "Key": "Name",
+      "Value": "NetworkStack/Network/vpc/prod-isolatedSubnetSubnet1"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/vpc/prod-isolatedSubnetSubnet1/RouteTable"
+   }
+  },
+  "NetworkvpcprodisolatedSubnetSubnet1RouteTableAssociationE71DE161": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "NetworkvpcprodisolatedSubnetSubnet1RouteTable321FD8E7"
+    },
+    "SubnetId": {
+     "Ref": "NetworkvpcprodisolatedSubnetSubnet1SubnetB2DD77B9"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/vpc/prod-isolatedSubnetSubnet1/RouteTableAssociation"
+   }
+  },
+  "NetworkvpcprodisolatedSubnetSubnet2SubnetE3583570": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "VpcId": {
+     "Ref": "NetworkvpcCC65534B"
+    },
+    "AvailabilityZone": "eu-west-2b",
+    "CidrBlock": "10.0.192.0/18",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "prod-isolatedSubnet"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Isolated"
+     },
+     {
+      "Key": "environment",
+      "Value": "prod"
+     },
+     {
+      "Key": "Name",
+      "Value": "NetworkStack/Network/vpc/prod-isolatedSubnetSubnet2"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/vpc/prod-isolatedSubnetSubnet2/Subnet"
+   }
+  },
+  "NetworkvpcprodisolatedSubnetSubnet2RouteTable6415FE2C": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "VpcId": {
+     "Ref": "NetworkvpcCC65534B"
+    },
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "prod"
+     },
+     {
+      "Key": "Name",
+      "Value": "NetworkStack/Network/vpc/prod-isolatedSubnetSubnet2"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/vpc/prod-isolatedSubnetSubnet2/RouteTable"
+   }
+  },
+  "NetworkvpcprodisolatedSubnetSubnet2RouteTableAssociationD3412964": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "NetworkvpcprodisolatedSubnetSubnet2RouteTable6415FE2C"
+    },
+    "SubnetId": {
+     "Ref": "NetworkvpcprodisolatedSubnetSubnet2SubnetE3583570"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/vpc/prod-isolatedSubnetSubnet2/RouteTableAssociation"
+   }
+  },
+  "NetworkvpcIGWFEE87DAF": {
+   "Type": "AWS::EC2::InternetGateway",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "prod"
+     },
+     {
+      "Key": "Name",
+      "Value": "NetworkStack/Network/vpc"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/vpc/IGW"
+   }
+  },
+  "NetworkvpcVPCGW6D90D482": {
+   "Type": "AWS::EC2::VPCGatewayAttachment",
+   "Properties": {
+    "VpcId": {
+     "Ref": "NetworkvpcCC65534B"
+    },
+    "InternetGatewayId": {
+     "Ref": "NetworkvpcIGWFEE87DAF"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/vpc/VPCGW"
+   }
+  },
+  "Networkcluster20284901": {
+   "Type": "AWS::ECS::Cluster",
+   "Properties": {
+    "ClusterName": "prod-ecsCluster",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "prod"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/cluster/Resource"
+   }
+  },
+  "NetworkloadbalancerSecurityGroup15F19417": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Public access to the load balancer.",
+    "GroupName": "prod-loadbalancerSecurityGroup",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "SecurityGroupIngress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow from anyone on port 80",
+      "FromPort": 80,
+      "IpProtocol": "tcp",
+      "ToPort": 80
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "prod"
+     }
+    ],
+    "VpcId": {
+     "Ref": "NetworkvpcCC65534B"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/loadbalancerSecurityGroup/Resource"
+   }
+  },
+  "NetworkingressToLoadbalancer22794D65": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "IpProtocol": "-1",
+    "CidrIp": "0.0.0.0/0",
+    "GroupId": {
+     "Fn::GetAtt": [
+      "NetworkloadbalancerSecurityGroup15F19417",
+      "GroupId"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/ingressToLoadbalancer"
+   }
+  },
+  "NetworkloadbalancerDDA9CA50": {
+   "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+   "Properties": {
+    "LoadBalancerAttributes": [
+     {
+      "Key": "deletion_protection.enabled",
+      "Value": "false"
+     }
+    ],
+    "Name": "prod-loadbalancer",
+    "Scheme": "internet-facing",
+    "SecurityGroups": [
+     {
+      "Fn::GetAtt": [
+       "NetworkloadbalancerSecurityGroup15F19417",
+       "GroupId"
+      ]
+     }
+    ],
+    "Subnets": [
+     {
+      "Ref": "NetworkvpcprodpublicSubnetSubnet1SubnetE0640059"
+     },
+     {
+      "Ref": "NetworkvpcprodpublicSubnetSubnet2Subnet4833FEA7"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "prod"
+     }
+    ],
+    "Type": "application"
+   },
+   "DependsOn": [
+    "NetworkvpcprodpublicSubnetSubnet1DefaultRouteC5483AE1",
+    "NetworkvpcprodpublicSubnetSubnet1RouteTableAssociationD92E449E",
+    "NetworkvpcprodpublicSubnetSubnet2DefaultRoute53C417B1",
+    "NetworkvpcprodpublicSubnetSubnet2RouteTableAssociationAA346FCE"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/loadbalancer/Resource"
+   }
+  },
+  "NetworkloadbalancerhttpListenerC6D4FF5F": {
+   "Type": "AWS::ElasticLoadBalancingV2::Listener",
+   "Properties": {
+    "DefaultActions": [
+     {
+      "TargetGroupArn": {
+       "Ref": "NetworkdefaultTargetGroup6F791668"
+      },
+      "Type": "forward"
+     }
+    ],
+    "LoadBalancerArn": {
+     "Ref": "NetworkloadbalancerDDA9CA50"
+    },
+    "Port": 80,
+    "Protocol": "HTTP"
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/loadbalancer/httpListener/Resource"
+   }
+  },
+  "NetworkdefaultTargetGroup6F791668": {
+   "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+   "Properties": {
+    "HealthCheckIntervalSeconds": 10,
+    "HealthCheckTimeoutSeconds": 5,
+    "HealthyThresholdCount": 2,
+    "Name": "prod-no-op-targetGroup",
+    "Port": 8080,
+    "Protocol": "HTTP",
+    "Tags": [
+     {
+      "Key": "environment",
+      "Value": "prod"
+     }
+    ],
+    "TargetGroupAttributes": [
+     {
+      "Key": "deregistration_delay.timeout_seconds",
+      "Value": "5"
+     },
+     {
+      "Key": "stickiness.enabled",
+      "Value": "false"
+     }
+    ],
+    "TargetType": "ip",
+    "VpcId": {
+     "Ref": "NetworkvpcCC65534B"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/defaultTargetGroup/Resource"
+   }
+  },
+  "NetworkvpcId97290EC4": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Type": "String",
+    "Value": {
+     "Ref": "NetworkvpcCC65534B"
+    },
+    "Name": "prod-Network-vpcId",
+    "Tags": {
+     "environment": "prod"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/vpcId/Resource"
+   }
+  },
+  "NetworkhttpListener4A30BB17": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Type": "String",
+    "Value": {
+     "Ref": "NetworkloadbalancerhttpListenerC6D4FF5F"
+    },
+    "Name": "prod-Network-httpListenerArn",
+    "Tags": {
+     "environment": "prod"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/httpListener/Resource"
+   }
+  },
+  "NetworkhttpsListenerA7E1A66C": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Type": "String",
+    "Value": "null",
+    "Name": "prod-Network-httpsListenerArn",
+    "Tags": {
+     "environment": "prod"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/httpsListener/Resource"
+   }
+  },
+  "NetworkloadBalancerSecurityGroupIdB25E2045": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Type": "String",
+    "Value": {
+     "Fn::GetAtt": [
+      "NetworkloadbalancerSecurityGroup15F19417",
+      "GroupId"
+     ]
+    },
+    "Name": "prod-Network-loadBalancerSecurityGroupId",
+    "Tags": {
+     "environment": "prod"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/loadBalancerSecurityGroupId/Resource"
+   }
+  },
+  "NetworkecsClusterName6F282CB3": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Type": "String",
+    "Value": {
+     "Ref": "Networkcluster20284901"
+    },
+    "Name": "prod-Network-ecsClusterName",
+    "Tags": {
+     "environment": "prod"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/ecsClusterName/Resource"
+   }
+  },
+  "NetworkavailabilityZoneOneB28E7D38": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Type": "String",
+    "Value": "eu-west-2a",
+    "Name": "prod-Network-availabilityZoneOne",
+    "Tags": {
+     "environment": "prod"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/availabilityZoneOne/Resource"
+   }
+  },
+  "NetworkavailabilityZoneTwoB2F37538": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Type": "String",
+    "Value": "eu-west-2b",
+    "Name": "prod-Network-availabilityZoneTwo",
+    "Tags": {
+     "environment": "prod"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/availabilityZoneTwo/Resource"
+   }
+  },
+  "NetworkisolatedSubnetOne1D216A01": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Type": "String",
+    "Value": {
+     "Ref": "NetworkvpcprodisolatedSubnetSubnet1SubnetB2DD77B9"
+    },
+    "Name": "prod-Network-isolatedSubnetIdOne",
+    "Tags": {
+     "environment": "prod"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/isolatedSubnetOne/Resource"
+   }
+  },
+  "NetworkisolatedSubnetTwo17705908": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Type": "String",
+    "Value": {
+     "Ref": "NetworkvpcprodisolatedSubnetSubnet2SubnetE3583570"
+    },
+    "Name": "prod-Network-isolatedSubnetIdTwo",
+    "Tags": {
+     "environment": "prod"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/isolatedSubnetTwo/Resource"
+   }
+  },
+  "NetworkpublicSubnetOne4469CF30": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Type": "String",
+    "Value": {
+     "Ref": "NetworkvpcprodpublicSubnetSubnet1SubnetE0640059"
+    },
+    "Name": "prod-Network-publicSubnetIdOne",
+    "Tags": {
+     "environment": "prod"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/publicSubnetOne/Resource"
+   }
+  },
+  "NetworkpublicSubnetTwo85E5FFDE": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Type": "String",
+    "Value": {
+     "Ref": "NetworkvpcprodpublicSubnetSubnet2Subnet4833FEA7"
+    },
+    "Name": "prod-Network-publicSubnetIdTwo",
+    "Tags": {
+     "environment": "prod"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/publicSubnetTwo/Resource"
+   }
+  },
+  "NetworkloadBalancerArn7B5E48DE": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Type": "String",
+    "Value": {
+     "Ref": "NetworkloadbalancerDDA9CA50"
+    },
+    "Name": "prod-Network-loadBalancerArn",
+    "Tags": {
+     "environment": "prod"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/loadBalancerArn/Resource"
+   }
+  },
+  "NetworkloadBalancerDnsNameB2330FB1": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Type": "String",
+    "Value": {
+     "Fn::GetAtt": [
+      "NetworkloadbalancerDDA9CA50",
+      "DNSName"
+     ]
+    },
+    "Name": "prod-Network-loadBalancerDnsName",
+    "Tags": {
+     "environment": "prod"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/loadBalancerDnsName/Resource"
+   }
+  },
+  "NetworkloadBalancerCanonicalHostedZoneId82D7409F": {
+   "Type": "AWS::SSM::Parameter",
+   "Properties": {
+    "Type": "String",
+    "Value": {
+     "Fn::GetAtt": [
+      "NetworkloadbalancerDDA9CA50",
+      "CanonicalHostedZoneID"
+     ]
+    },
+    "Name": "prod-Network-loadBalancerCanonicalHostedZoneId",
+    "Tags": {
+     "environment": "prod"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/Network/loadBalancerCanonicalHostedZoneId/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31Qy26DMBD8ltyNS3NozpRDlKoHBFGu1eJs6SbGRn4QRYh/ryEQ6KUnz86sd2Z3y3cxjzdws5E4XyNJJe8KB+LKAvXVodjy7tQIln6rU5ayzJeSROFLhW7gFpRr7/AIpcSFX7jEWi0IHGn1bGaZoRYcLjMOyqEJeB/YG9wn06lKXIj1U6NyrEDhDbn73mjfjHb/EgdVGbS2Zygs71LpbbAZuiYYBAnWkZAaziVIUIJU1YbNk6YJ646xP4P2PmqPv3/qdR+FkWrqmfFKP4KpwoZz0FXZM2vr4fomuGdgoMYp57Poe5aj1d6I8coz7tkHtPDyuuMxf9tcLFFkvHJUI88f7y+KEUoO5wEAAA=="
+   },
+   "Metadata": {
+    "aws:cdk:path": "NetworkStack/CDKMetadata/Default"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

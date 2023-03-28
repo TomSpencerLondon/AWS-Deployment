@@ -1,4 +1,3 @@
-com/myorg/CdkExampleApp2.class
-com/myorg/CdkExampleStack.class
-com/myorg/CdkExampleStack2.class
-com/myorg/CdkExampleApp.class
+com/myorg/Validations.class
+com/myorg/NetworkApp.class
+com/myorg/DockerRepositoryApp.class

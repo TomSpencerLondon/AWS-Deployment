@@ -1201,4 +1201,173 @@ So far we have looked at debugging CloudFormation scripts by using the cdk.out f
 We have tried to stick to the rule of using one stack per app and we have used the cdk.json
 and npm to save retyping scripts and parameters.
 
+### Deploying a Network Stack with CDK
+In this section we will build a CDK app to deploy a network. We will explore the Network construct and experiment with
+sharing parameters between CDK constructs with SSM.
+This is a cleaned up version of the DockerRepositoryApp:
+```java
+public class DockerRepositoryApp {
+
+    public static void main(String[] args) {
+        App app = new App();
+
+        String accountId = (String) app.getNode().tryGetContext("accountId");
+        Validations.requireNonEmpty(accountId, "context variable 'accountId' must not be null");
+
+        String region = (String) app.getNode().tryGetContext("region");
+        Validations.requireNonEmpty(region, "context variable 'region' must not be null");
+
+        String applicationName = (String) app.getNode().tryGetContext("applicationName");
+        Validations.requireNonEmpty(applicationName, "context variable 'applicationName' must not be null");
+        
+        Environment awsEnvironment = makeEnv(accountId, region);
+
+        Stack dockerRepositoryStack = new Stack(app, "DockerRepositoryStack", StackProps.builder()
+                .stackName(applicationName + "-DockerRepository")
+                .env(awsEnvironment)
+                .build()
+        );
+
+        DockerRepository dockerRepository = new DockerRepository(
+                dockerRepositoryStack,
+                "DockerRepository",
+                awsEnvironment,
+                new DockerRepository.DockerRepositoryInputParameters(applicationName, accountId)
+        );
+
+        app.synth();
+
+    }
+
+    static Environment makeEnv(String account, String region) {
+        return Environment.builder()
+                .account(account)
+                .region(region)
+                .build();
+    }
+}
+```
+
+We then create the NetworApp:
+```java
+public class NetworkApp {
+
+    public static void main(String[] args) {
+        App app = new App();
+
+        String accountId = (String) app.getNode().tryGetContext("accountId");
+        Validations.requireNonEmpty(accountId, "context variable 'accountId' must not be null");
+
+        String region = (String) app.getNode().tryGetContext("region");
+        Validations.requireNonEmpty(region, "context variable 'region' must not be null");
+
+        String applicationName = (String) app.getNode().tryGetContext("applicationName");
+        Validations.requireNonEmpty(applicationName, "context variable 'applicationName' must not be null");
+
+        String environmentName = (String) app.getNode().tryGetContext("environmentName");
+        Validations.requireNonEmpty(environmentName, "context variable 'environmentName' must not be null");
+
+
+        Environment env = makeEnv(accountId, region);
+
+        Stack networkStack = new Stack(app, "NetworkStack", StackProps.builder()
+                .stackName(environmentName + "-Network")
+                .env(env)
+                .build()
+        );
+
+        Network network = new Network(
+                networkStack,
+                "Network",
+                env,
+                environmentName,
+                new Network.NetworkInputParameters());
+
+        app.synth();
+
+    }
+
+    static Environment makeEnv(String account, String region) {
+        return Environment.builder()
+                .account(account)
+                .region(region)
+                .build();
+    }
+}
+
+```
+
+We then add the NetworkApp to the package.json:
+```json
+
+{
+  "name": "cdk-example",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "repository:deploy": "cdk deploy --app \"./mvnw -e -q compile exec:java -Dexec.mainClass=com.myorg.DockerRepositoryApp \" --require-approval never --profile stratospheric",
+    "repository:destroy": "cdk destroy --app \"./mvnw -e -q compile exec:java -Dexec.mainClass=com.myorg.DockerRepositoryApp \" --require-approval never --profile stratospheric"
+    "network:deploy": "cdk deploy --app \"./mvnw -e -q compile exec:java -Dexec.mainClass=com.myorg.NetworkApp \" --require-approval never --profile stratospheric",
+    "network:destroy": "cdk destroy --app \"./mvnw -e -q compile exec:java -Dexec.mainClass=com.myorg.NetworkApp \" --require-approval never --profile stratospheric"
+  },
+  "devDependencies": {
+    "aws-cdk": "2.70.0"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}
+```
+
+Here we are using the Network Construct to create the network:
+```java
+public class Network extends Construct {
+    public Network(Construct scope, String id, Environment environment, String environmentName, NetworkInputParameters networkInputParameters) {
+        super(scope, id);
+        this.environmentName = environmentName;
+        this.vpc = this.createVpc(environmentName);
+        this.ecsCluster = Builder.create(this, "cluster").vpc(this.vpc).clusterName(this.prefixWithEnvironmentName("ecsCluster")).build();
+        this.createLoadBalancer(this.vpc, networkInputParameters.getSslCertificateArn());
+        Tags.of(this).add("environment", environmentName);
+    }
+
+    private void createLoadBalancer(IVpc vpc, Optional<String> sslCertificateArn) {
+        this.loadbalancerSecurityGroup = software.amazon.awscdk.services.ec2.SecurityGroup.Builder.create(this, "loadbalancerSecurityGroup").securityGroupName(this.prefixWithEnvironmentName("loadbalancerSecurityGroup")).description("Public access to the load balancer.").vpc(vpc).build();
+        CfnSecurityGroupIngress ingressFromPublic = software.amazon.awscdk.services.ec2.CfnSecurityGroupIngress.Builder.create(this, "ingressToLoadbalancer").groupId(this.loadbalancerSecurityGroup.getSecurityGroupId()).cidrIp("0.0.0.0/0").ipProtocol("-1").build();
+        this.loadBalancer = software.amazon.awscdk.services.elasticloadbalancingv2.ApplicationLoadBalancer.Builder.create(this, "loadbalancer").loadBalancerName(this.prefixWithEnvironmentName("loadbalancer")).vpc(vpc).internetFacing(true).securityGroup(this.loadbalancerSecurityGroup).build();
+        IApplicationTargetGroup dummyTargetGroup = software.amazon.awscdk.services.elasticloadbalancingv2.ApplicationTargetGroup.Builder.create(this, "defaultTargetGroup").vpc(vpc).port(8080).protocol(ApplicationProtocol.HTTP).targetGroupName(this.prefixWithEnvironmentName("no-op-targetGroup")).targetType(TargetType.IP).deregistrationDelay(Duration.seconds(5)).healthCheck(HealthCheck.builder().healthyThresholdCount(2).interval(Duration.seconds(10)).timeout(Duration.seconds(5)).build()).build();
+        this.httpListener = this.loadBalancer.addListener("httpListener", BaseApplicationListenerProps.builder().port(80).protocol(ApplicationProtocol.HTTP).open(true).build());
+        this.httpListener.addTargetGroups("http-defaultTargetGroup", AddApplicationTargetGroupsProps.builder().targetGroups(Collections.singletonList(dummyTargetGroup)).build());
+        if (sslCertificateArn.isPresent()) {
+            IListenerCertificate certificate = ListenerCertificate.fromArn((String)sslCertificateArn.get());
+            this.httpsListener = this.loadBalancer.addListener("httpsListener", BaseApplicationListenerProps.builder().port(443).protocol(ApplicationProtocol.HTTPS).certificates(Collections.singletonList(certificate)).open(true).build());
+            this.httpsListener.addTargetGroups("https-defaultTargetGroup", AddApplicationTargetGroupsProps.builder().targetGroups(Collections.singletonList(dummyTargetGroup)).build());
+            ListenerAction redirectAction = ListenerAction.redirect(RedirectOptions.builder().protocol("HTTPS").port("443").build());
+            new ApplicationListenerRule(this, "HttpListenerRule", ApplicationListenerRuleProps.builder().listener(this.httpListener).priority(1).conditions(List.of(ListenerCondition.pathPatterns(List.of("*")))).action(redirectAction).build());
+        }
+
+        this.createOutputParameters();
+    }
+}
+```
+This Construct creates a VPC, ECSCluster and Load Balancer for us. The VPC Construct creates the Internet Gateway and Routing Table for us also.
+CDK abstracts the details for us. For each construct the Network construct creates StringParameters which are accessible through AWS Systems Manager.
+![image](https://user-images.githubusercontent.com/27693622/228353250-2a0ebcd0-1684-4667-bc8b-1c20cfcf0f54.png)
+
+
+We can deploy the stack with:
+```bash
+npm run network:deploy -- -c environmentName=staging
+```
+
+We can also deploy the stack for production:
+```bash
+npm run network:deploy -- -c environmentName=prod
+```
+We can look on CloudFormation to see all the Network resources that have been deployed for us:
+![image](https://user-images.githubusercontent.com/27693622/228351453-a3eb005c-fd46-4e38-bb43-d0798098c373.png)
+
+We can now see how Constructs can abstract a lot of the complexity of deploying a full stack application. Using the 
+We have also seen how the Construct creates entries in AWS Systems Manager for the parameters that are related to the resources
+we have deployed.
 
