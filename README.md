@@ -1371,3 +1371,5 @@ We can now see how Constructs can abstract a lot of the complexity of deploying 
 We have also seen how the Construct creates entries in AWS Systems Manager for the parameters that are related to the resources
 we have deployed.
 
+### Deploying a Service Stack with CDK
+We will now use the Service Construct to create a service on AWS ECS.
