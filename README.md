@@ -677,3 +677,6 @@ We have also used the CloudFormation docs to explore the available AWS resources
 Here we will learn about ECS basics including clusters, services and tasks. We will define ECS resources with CloudFormation
 and we will learn about the interactions that are possible between CloudFormation stacks.
 
+![image](https://user-images.githubusercontent.com/27693622/228235829-8392ec96-a701-42fc-800a-74e13ab598d8.png)
+
+
