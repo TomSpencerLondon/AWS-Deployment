@@ -259,6 +259,14 @@ We now look at resources and stacks. We will look at how to create a stack templ
 a template file. We will also find our stack on the AWS web console.
 
 ![image](https://user-images.githubusercontent.com/27693622/228094645-7efebfc7-b999-4940-9677-8b8f2780ecb5.png)
+We declare the resources we need in a stack template. These might include a VPC, Load balancer and a database. We declare the
+resources in a stack file and CloudFormation deploys the resources for us. The CloudFormation docs list all the resources
+we can deploy with CloudFormation:
+https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html
+
+For each of the resources we need to refer to the documentation for each resource. A stack is a group of resources that belong
+together. All the resources in the stack are created updated and deleted together.
+We are now going to create a CloudFormation stack to create an ECR repository:
 
 We will create a Docker repository stack:
 ![image](https://user-images.githubusercontent.com/27693622/228096362-770b5794-ecf3-4cea-830b-30305b5414d1.png)
