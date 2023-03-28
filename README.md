@@ -258,5 +258,5 @@ CloudFormation is the AWS service for infrastructure as code. AWS creates the re
 We now look at resources and stacks. We will look at how to create a stack template in yaml and how to create a stack from
 a template file. We will also find our stack on the AWS web console.
 
-![image](https://user-images.githubusercontent.com/27693622/228094220-4aba40e7-3947-4c49-91dc-7ce618ba76cb.png)
+![image](https://user-images.githubusercontent.com/27693622/228094382-e298fb09-46d5-49e7-b453-927953d31999.png)
 
