@@ -161,4 +161,100 @@ repository.
 
 ![image](https://user-images.githubusercontent.com/27693622/228086206-499a178c-237a-4689-a6c4-afdb829c74c6.png)
 
+The application that we will deploy is a simple Hello World app. This is the Dockerfile for the deployment:
+
+```dockerfile
+FROM eclipse-temurin:17-jre
+
+ARG JAR_FILE=build/libs/*.jar
+COPY ${JAR_FILE} app.jar
+
+ENTRYPOINT ["java", "-jar", "/app.jar"]
+```
+This Dockerfile downloads Java 17, builds the application to a Docker image with an entry point to the jar file.
+We build the jar file with:
+
+```bash
+./gradlew clean build
+```
+
+We then build the docker image:
+```bash
+docker build -t hello-world-app .
+```
+Here we give the docker image the name hello-world-app.
+We check for our docker image with the follow grep on docker image ls:
+```bash
+tom@tom-ubuntu:~/Projects/stratospheric-dev$ docker image ls | grep hello-world-app
+hello-world-app   latest    f1307dc16f7e   48 seconds ago   288MB
+```
+We can then run the application and expose the app to port 8080 on our host computer:
+```bash
+docker run -p 8080:8080 hello-world-app
+```
+We can now see the application on port 8080:
+![image](https://user-images.githubusercontent.com/27693622/228090110-97714941-4bde-4d15-975b-61afe94a347f.png)
+
+We are now going to create a docker repository on Amazon ECR. We now go to Amazon Elastic Container Registry on AWS.
+We should enable tag immutability to avoid changing tags later.
+![image](https://user-images.githubusercontent.com/27693622/228090443-13b96768-ad9e-4ce8-ba4d-ccc8d8a909b7.png)
+
+We then create the repository.
+![image](https://user-images.githubusercontent.com/27693622/228090503-74083a52-8014-4cba-986e-3091288e6884.png)
+
+For the moment it has no Docker images:
+![image](https://user-images.githubusercontent.com/27693622/228090543-70e8f754-d374-4f72-8990-e9779697c472.png)
+
+We now tag our image locally with the url of our new docker repository and the tags latest and v1:
+```bash
+tom@tom-ubuntu:~/Projects/stratospheric/helloWorld$ docker tag hello-world-app 706054169063.dkr.ecr.us-east-1.amazonaws.com/hello-world-app:latest
+tom@tom-ubuntu:~/Projects/stratospheric/helloWorld$ docker tag hello-world-app 706054169063.dkr.ecr.us-east-1.amazonaws.com/hello-world-app:v1
+```
+We can check the tags by looking for our images in our local repository:
+```bash
+tom@tom-ubuntu:~/Projects/stratospheric/helloWorld$ docker image ls | grep hello-world-app
+706054169063.dkr.ecr.us-east-1.amazonaws.com/hello-world-app   latest    e4d2957745e5   3 minutes ago   288MB
+706054169063.dkr.ecr.us-east-1.amazonaws.com/hello-world-app   v1        e4d2957745e5   3 minutes ago   288MB
+hello-world-app                                                latest    e4d2957745e5   3 minutes ago   288MB
+```
+We now have two images with the url of our ECR repository and tagged with latest and v1 respectively.
+We now log into the docker repository to publish our image. We use the AWS cli and login to docker with our aws repository:
+```bash
+tom@tom-ubuntu:~/Projects/stratospheric/helloWorld$ aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 706054169063.dkr.ecr.us-east-1.amazonaws.com 
+WARNING! Your password will be stored unencrypted in /home/tom/.docker/config.json.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/engine/reference/commandline/login/#credentials-store
+
+Login Succeeded
+```
+
+We then push the latest image to our repository:
+```bash
+tom@tom-ubuntu:~/Projects/stratospheric/helloWorld$ docker push 706054169063.dkr.ecr.us-east-1.amazonaws.com/hello-world-app:latest
+```
+We can now see the image in our ECR repository:
+![image](https://user-images.githubusercontent.com/27693622/228092241-08562c73-46e7-40fa-836a-16d7073425a2.png)
+
+We also push v1:
+```bash
+tom@tom-ubuntu:~/Projects/stratospheric/helloWorld$ docker push 706054169063.dkr.ecr.us-east-1.amazonaws.com/hello-world-app:v1
+The push refers to repository [706054169063.dkr.ecr.us-east-1.amazonaws.com/hello-world-app]
+8e12efddf5f4: Layer already exists 
+5ff725d720ec: Layer already exists 
+3b028c775252: Layer already exists 
+f3a12c51479f: Layer already exists 
+b93c1bd012ab: Layer already exists 
+v1: digest: sha256:5b1075ab16f8bfdd00930963af1bfaca318fd73715aaccdb1e77c865d6dd1d40 size: 1372
+```
+
+We now have the tag of v1 and latest in our repository:
+![image](https://user-images.githubusercontent.com/27693622/228092462-bae26fb7-0156-4c5f-9ea5-0876cd72e99c.png)
+
+So far we have created a Docker repository with ECR. We create one Docker repository per app. We can also pull and push to the ECR repository
+from the AWS CLI.
+
+#### CloudFormation
+CloudFormation is the AWS service for infrastructure as code. AWS creates the resources that we declare in our CloudFormation file.
+We now look at resources and stacks. We will look at how to create a stack template in yaml and how to create a stack from
+a template file. We will also find our stack on the AWS web console.
 
