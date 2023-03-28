@@ -1373,3 +1373,5 @@ we have deployed.
 
 ### Deploying a Service Stack with CDK
 We will now use the Service Construct to create a service on AWS ECS.
+
+![image](https://user-images.githubusercontent.com/27693622/228356531-a6d84f03-3bb7-4091-95a6-cdd53eade21b.png)
