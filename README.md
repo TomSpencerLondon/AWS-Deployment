@@ -270,3 +270,143 @@ We are now going to create a CloudFormation stack to create an ECR repository:
 
 We will create a Docker repository stack:
 ![image](https://user-images.githubusercontent.com/27693622/228096362-770b5794-ecf3-4cea-830b-30305b5414d1.png)
+
+We first need to look at the CloudFormation docs and ECR repository in particular:
+https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecr-repository.html
+
+This shows us the options that we can use for our stack:
+```yaml
+Type: AWS::ECR::Repository
+Properties: 
+  EncryptionConfiguration: 
+    EncryptionConfiguration
+  ImageScanningConfiguration: 
+    ImageScanningConfiguration
+  ImageTagMutability: String
+  LifecyclePolicy: 
+    LifecyclePolicy
+  RepositoryName: String
+  RepositoryPolicyText: Json
+  Tags: 
+    - Tag
+
+```
+Each of the options are documented on the page. We can use the configuration details given on the page to create ecr.yml page:
+```yaml
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploys a Docker container registry.
+Parameters:
+  RegistryName:
+    Type: String
+    Description: The name of the container registry
+Resources:
+  Registry:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Ref 'RegistryName'
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+              "rules": [
+                  {
+                      "rulePriority": 10,
+                      "description": "Limit to 10 images",
+                      "selection": {
+                         "tagStatus": "any",
+                         "countType": "imageCountMoreThan",
+                         "countNumber": 10
+                     },
+                      "action": {
+                          "type": "expire"
+                      }
+                  }
+              ]
+          }
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowPushPull
+            Effect: Allow
+            Principal:
+              AWS:
+                - "arn:aws:iam::706054169063:user/tom-developer"
+            Action:
+              - "ecr:GetDownloadUrlForLayer"
+              - "ecr:BatchGetImage"
+              - "ecr:BatchCheckLayerAvailability"
+              - "ecr:PutImage"
+              - "ecr:InitiateLayerUpload"
+              - "ecr:UploadLayerPart"
+              - "ecr:CompleteLayerUpload"
+```
+The parameters section:
+```yaml
+Parameters:
+  RegistryName:
+    Type: String
+    Description: The name of the container registry
+```
+means that when we deploy the stack we can add a parameter with the registry name. This means we can
+reuse the stack. We set the name of the repository (RepositoryName) with the input parameter we added earlier:
+```yaml
+Resources:
+  Registry:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Ref 'RegistryName'
+```
+Here the lifecycle policy sets a limit of 10 images and will delete images when the number of images is above that number:
+```yaml
+LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+              "rules": [
+                  {
+                      "rulePriority": 10,
+                      "description": "Limit to 10 images",
+                      "selection": {
+                         "tagStatus": "any",
+                         "countType": "imageCountMoreThan",
+                         "countNumber": 10
+                     },
+                      "action": {
+                          "type": "expire"
+                      }
+                  }
+              ]
+          }
+```
+The repository policy text specifies the allowed actions on the repository for the Principal users that we define.
+The actions include sending images to the repository and downloading images.
+We deploy the stack with the following command:
+```bash
+tom@tom-ubuntu:~/Projects/stratospheric/cloudformation$ aws cloudformation deploy \
+> --stack-name=hello-world-docker-repository \
+> --template-file ecr.yml \
+> --parameter-overrides RegistryName=hello-world-app \
+> --profile stratospheric
+
+Waiting for changeset to be created..
+Waiting for stack create/update to complete
+Successfully created/updated stack - hello-world-docker-repository
+```
+This has created a Docker ECR repository in the eu-west-2 region:
+![image](https://user-images.githubusercontent.com/27693622/228100382-2dd3dff3-bb87-4a1d-9bba-189381557cc1.png)
+
+If we use the same stack-name we can change the properties of the same stack.
+We can also see the CloudFormation stack on the CloudFormation page:
+![image](https://user-images.githubusercontent.com/27693622/228100696-a5b4bf0f-ce29-4e1b-9743-d4959a05fd85.png)
+
+We can also look at the hollow-world-docker-repository and the actions and events for the CloudFormation stack:
+![image](https://user-images.githubusercontent.com/27693622/228100840-c14277fe-43b8-42ac-bf80-fba78d2c0fed.png)
+
+So far we have declared resources in a stack file. CloudFormation has taken care of the lifecycle of the resources that we
+defined. We have parameterised the stack file so that we can use the stack file for multiple deployments with different parameters.
+
+### Deploying a Network Stack with Cloud Formation
+In this section we will look at why we use separate CloudFormation stacks for Network deployments.
+We will look at the networking resources AWS provides. We will also learn more about the CloudFormation stack file
+syntax.
+
+
+
