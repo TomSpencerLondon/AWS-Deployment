@@ -666,6 +666,14 @@ aws cloudformation deploy \
 ```
 
 The Elastic Container Stack (ECS) cluster is the service we use to contain the resources we want to deploy. It is in the network stack
-because we will only deploy the ECS cluster once. We run the above command and can see that the stack is being deployed:
+because we will only deploy the ECS cluster once. We run the above command and can see that the stack has been created:
 
 ![image](https://user-images.githubusercontent.com/27693622/228232253-81b6be5e-be9f-4fae-a7d7-bd05ab409d9c.png)
+
+We have created a network stack which will not need to change. We have added input parameters which we then use in the stack template.
+We have also used the CloudFormation docs to explore the available AWS resources.
+
+### Deploying Service Stack with CloudFormation
+Here we will learn about ECS basics including clusters, services and tasks. We will define ECS resources with CloudFormation
+and we will learn about the interactions that are possible between CloudFormation stacks.
+
