@@ -687,4 +687,10 @@ to a specific AWS region and VPC. Each task is a process. We can now look at how
 
 ![image](https://user-images.githubusercontent.com/27693622/228239310-5b6508e7-ac80-4b85-8e8f-321fb5314800.png)
 
+The Task Definition tells us what Docker image to run and then we use the image within that Docker Repository. There are two
+different launch types for ECS - Fargate and EC2. The Fargate launch type does work for us. Fargate spins a fleet of required EC2 instances and manages
+them for us after we have specified which tasks to run and how many task instances we want to have running at all times. The EC2
+launch type allows us to control the EC2 instances that are running our tasks and we have to manage this process. We can define
+auto scaling rules but have to define our own auto-scaling group.
+
 
