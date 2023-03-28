@@ -677,6 +677,13 @@ We have also used the CloudFormation docs to explore the available AWS resources
 Here we will learn about ECS basics including clusters, services and tasks. We will define ECS resources with CloudFormation
 and we will learn about the interactions that are possible between CloudFormation stacks.
 
+#### ECS Basics
 ![image](https://user-images.githubusercontent.com/27693622/228235829-8392ec96-a701-42fc-800a-74e13ab598d8.png)
+
+Elastic Container Service (ECS) is an AWS self service container orchestration service. The applications to deploy are called tasks.
+In the diagram above we have multiple tasks. Service A runs two instances of Task 1 and one of Task 2. The application may need more resources
+for Task 1 so that is why we have included them within this service. The cluster is a wrapper around one or more services and binds the services
+to a specific AWS region and VPC. Each task is a process. We can now look at how each Task is assigned a process:
+
 
 
