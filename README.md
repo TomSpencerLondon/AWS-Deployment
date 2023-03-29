@@ -1377,3 +1377,176 @@ We will now use the Service Construct to create a service on AWS ECS.
 ![image](https://user-images.githubusercontent.com/27693622/228356531-a6d84f03-3bb7-4091-95a6-cdd53eade21b.png)
 
 The above image describes the main parts of the service app.
+
+We now create a Service Stack:
+```java
+
+public class ServiceApp {
+
+    public static void main(String[] args) {
+        App app = new App();
+
+        String accountId = (String) app.getNode().tryGetContext("accountId");
+        Validations.requireNonEmpty(accountId, "context variable 'accountId' must not be null");
+
+        String region = (String) app.getNode().tryGetContext("region");
+        Validations.requireNonEmpty(region, "context variable 'region' must not be null");
+
+        String applicationName = (String) app.getNode().tryGetContext("applicationName");
+        Validations.requireNonEmpty(applicationName, "context variable 'applicationName' must not be null");
+
+        String environmentName = (String) app.getNode().tryGetContext("environmentName");
+        Validations.requireNonEmpty(environmentName, "context variable 'environmentName' must not be null");
+
+        String dockerRepositoryName = (String) app.getNode().tryGetContext("dockerRepositoryName");
+        Validations.requireNonEmpty(dockerRepositoryName, "context variable 'dockerRepositoryName' must not be null");
+
+
+        String dockerImageTag = (String) app.getNode().tryGetContext("dockerImageTag");
+        Validations.requireNonEmpty(dockerImageTag, "context variable 'dockerImageTag' must not be null");
+
+
+
+        Environment env = makeEnv(accountId, region);
+
+        ApplicationEnvironment applicationEnvironment = new ApplicationEnvironment(
+                applicationName,
+                environmentName);
+
+        Stack serviceStack = new Stack(app, "ServiceStack", StackProps.builder()
+                .stackName(environmentName + "-Service")
+                .env(env)
+                .build()
+        );
+
+        Network.NetworkOutputParameters networkOutputParameters = Network.getOutputParametersFromParameterStore(serviceStack, applicationEnvironment.getEnvironmentName());
+
+        Service service = new Service(
+                serviceStack,
+                "Service",
+                env,
+                applicationEnvironment,
+                new Service.ServiceInputParameters(
+                        new Service.DockerImageSource(dockerRepositoryName, dockerImageTag),
+                        new HashMap<>()),
+                networkOutputParameters
+        );
+
+        app.synth();
+
+    }
+
+    static Environment makeEnv(String account, String region) {
+        return Environment.builder()
+                .account(account)
+                .region(region)
+                .build();
+    }
+}
+
+```
+
+We are going to refer to the hello-world-app on ECR:
+![image](https://user-images.githubusercontent.com/27693622/228363818-fcaa19d1-544d-40e1-891e-0e815b7a6e51.png)
+
+We can now deploy our service with:
+```bash
+npm run service:deploy -- -c environmentName=staging
+```
+
+We can now see all the Constructs created as part of our deployment:
+![image](https://user-images.githubusercontent.com/27693622/228364864-68681890-1c1a-4072-beda-e14ed35edf62.png)
+
+We can view the logs of the deployment:
+![image](https://user-images.githubusercontent.com/27693622/228365292-d41cd9e8-1277-4716-b93c-23b3957f86bb.png)
+
+We can also see the app running on the loadbalancer associated with our target group:
+![image](https://user-images.githubusercontent.com/27693622/228365967-e24adf7e-859f-48ad-83b1-46d46ea80160.png)
+
+So, we have deployed a SpringBoot application to the cloud using CDK. The CDK and CloudFormation did a lot of the hard work by spinning up the
+Application Load Balancer and EC2 instances. We have built loosely coupled stacks. The Constructs have protected us from a lot of the
+complexity of building the resources.
+
+### Continuous Deployment with CDK and Github Actions
+We can now practice deploying our application to the cloud using Github Actions and build a CD pipeline.
+
+# Hello Stratospheric
+This is the link for our Continuous Deployment github actions example:
+https://github.com/TomSpencerLondon/hello-stratospheric
+
+A Hello World app to showcase a continuous deployment pipeline with Spring Boot, CDK, and AWS.
+
+### Build app
+```bash
+./gradlew build
+```
+
+We have a Dockerfile for building the application:
+```Dockerfile
+FROM eclipse-temurin:17-jre
+
+ARG JAR_FILE=build/libs/*.jar
+COPY ${JAR_FILE} app.jar
+
+ENTRYPOINT ["java", "-jar", "/app.jar"]
+```
+
+We can query our AWS credentials with:
+```bash
+aws sts get-caller-identity
+```
+
+### Continuous Deployment
+
+![image](https://user-images.githubusercontent.com/27693622/228384793-5de2fcd2-a737-4d4a-8558-07b89e1be581.png)
+
+In the first lane of the diagram above we have the main pipeline which runs tests and builds for a jar file. This is then converted to an image that is published to ECR.
+The deploy step deploys the application using the Service App from our repository. The ECS Service requires a VPC and an ECR
+Repository. We manually create teh Docker Repository and Network before creating the Service.  When we push to the git repository the app will be built and then published to the ECR repository. If the publish step is successful
+the deploy step deploys the Docker image. The ECS Service requires a VPC and ECR Repository. The ECR Repository and the Network will not change
+frequently so they are not included in the pipeline. We create the Docker Repository and Network manually.
+In GitHub Actions we have a workflow which is a series of actions that are triggered for instance by a push to the main branch.
+The Workflow contains one or more jobs and jobs contain one or more steps. Steps in a job always run in sequence.
+We will start with a Bootstrap command pushing to the Docker repository.
+
+We will have to enter the secrets in the github repository:
+```yml
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+```
+
+We are keeping all the folders for AWS deployment with CDK in the CDK folder. The github workflows are kept in the .github folder.
+As part of the manual section of the deploy we bootstrap the environment for the DockerRepository. Bootstrapping is the deployment of an
+AWS CloudFormation template to a specific AWS environment (account and Region). The bootstrapping template accepts parameters that customize
+some aspects of the bootstrapped resources. We can see the github actions on the Actions tab of our repository:
+![image](https://user-images.githubusercontent.com/27693622/228491420-345ee44c-103a-414f-bbcc-2e7d40127ba9.png)
+
+The instructions for the manual deploy are kept in 01-bootstrap.yml and 02-create-environment.yml. The build and deploy commands are kept in
+03-build-and-deploy.yml. This runs every time there is a push to the main branch:
+```yaml
+on:
+  push:
+    branches:
+      - main
+```
+We also have a concurrency entry on deploy:
+```yaml
+  deploy:
+    runs-on: ubuntu-20.04
+    name: Deploy Todo App (Demo)
+    needs: build-and-publish
+    timeout-minutes: 15
+    if: github.ref == 'refs/heads/main'
+    concurrency: hello-world-deployment
+    steps:
+```
+This avoids conflicts if two people merge code in the same timeframe. This [doc](https://docs.github.com/en/actions/using-jobs/using-concurrency) is
+useful on concurrency. We can now see the staging-Service on CloudFormation:
+![image](https://user-images.githubusercontent.com/27693622/228494858-b363b897-5dcb-4484-89e2-0b9bc03fdd43.png)
+
+If we click on the Load Balancer url in Resources we can see our app is up and running:
+![image](https://user-images.githubusercontent.com/27693622/228495152-34b45823-bf30-4bd4-9743-708bd0cb524c.png)
+
+We have now wrapped the cdk commands in a GitHub workflow. We had two forms of workflow: manual triggers and on push.
