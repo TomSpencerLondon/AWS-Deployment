@@ -1550,3 +1550,19 @@ If we click on the Load Balancer url in Resources we can see our app is up and r
 ![image](https://user-images.githubusercontent.com/27693622/228495152-34b45823-bf30-4bd4-9743-708bd0cb524c.png)
 
 We have now wrapped the cdk commands in a GitHub workflow. We had two forms of workflow: manual triggers and on push.
+
+### Spring Boot & AWS
+We are going to build an application with Spring Boot and deploy it to AWS Cloud.
+This application includes:
+- Registration and login
+- CRUD: Viewing, adding and deleting Todos
+- Sharing Todos
+- Email notifications
+- Push notifications
+
+![image](https://user-images.githubusercontent.com/27693622/228534282-5d963e84-e43c-41a3-868a-6100dc20c131.png)
+
+The above architecture describes the features we will implement. We interact with a REST API for showing thymeleaf pages.
+We use an RDS database on RDS and a DynamoDB database for storage. We will decouple sending emails with SQS. We will allow
+push notifications for collaboration with Amazon MQ with a websocket broker relay.
+
